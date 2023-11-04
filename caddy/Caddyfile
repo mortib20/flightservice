@@ -1,0 +1,135 @@
+{
+	email {$MAIL}
+	admin off
+
+	log {
+		format console
+	}
+}
+
+(cors) {
+	@origin header Origin {args[0]}
+	header @origin Access-Control-Allow-Origin "{args.0}"
+	header @origin Access-Control-Allow-Methods "OPTIONS,HEAD,GET,POST,PUT,PATCH,DELETE"
+}
+
+(compression) {
+	encode gzip
+}
+
+(longcache) {
+	header Cache-Control "public, max-age=7776000"
+}
+
+(acarflow) {
+	reverse_proxy acarflow:21001
+}
+
+(tar1090) {
+	redir /tar1090 /tar1090/
+
+	handle_path /tar1090* {
+		root * /html
+		file_server
+		encode * gzip
+
+		header ?Cache-Control "public, max-age=3600, must-revalidate"
+
+		# exact matches
+		handle /index.html {
+			header Cache-Control "public, no-cache"
+		}
+
+		handle /config.js {
+			header Cache-Control "public, no-cache"
+		}
+
+		# regex matches
+
+		handle /images/* {
+			import longcache
+		}
+
+		handle /flags-tiny/* {
+			import longcache
+		}
+
+		handle /db-*/*.js {
+			import longcache
+			header Content-Encoding "gzip"
+		}
+
+		handle /libs/* {
+			import longcache
+		}
+
+		handle /style.css {
+			import longcache
+		}
+	}
+
+	handle_path /tar1090/data* {
+		root * /run/readsb
+		file_server
+
+		header Cache-Control "public, no-cache"
+	}
+
+	handle_path /tar1090/chunks* {
+		root * /run/tar1090
+		file_server
+
+		handle /chunk_*.gz {
+			header Cache-Control "public, max-age=86400"
+			header Content-Type "application/json"
+			header Content-Encoding "gzip"
+		}
+
+		handle /current_*.gz {
+			header Cache-Control "must-revalidate"
+			header Content-Type "application/json"
+			header Content-Encoding "gzip"
+		}
+
+		handle /*.json {
+			header Cache-Control "public, no-cache"
+		}
+	}
+
+	handle_path /tar1090/globe_history* {
+		root * /var/globe_history
+		file_server
+
+		import longcache
+	}
+
+	handle_path /tar1090/aircraft_sil* {
+		root * /usr/local/share/tar1090/aircraft_sil
+		file_server
+
+		import longcache
+	}
+
+	handle_path /readsb* {
+		root * /run/readsb
+		file_server * browse
+	}
+
+	# Not Used
+	#handle_path /tar1090/osm_tiles_offline/* {
+	#    root * /usr/local/share/osm_tiles_offline
+	#    file_server
+	#}
+}
+
+{$DOMAIN:localhost}, http://192.168.168.3 {
+	import compression
+	import cors *
+	import tar1090
+}
+
+dyn2.martpaul.de:22001 {
+	import compression
+    import cors *
+    import acarflow
+}

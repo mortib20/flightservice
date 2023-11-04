@@ -1,0 +1,217 @@
+volumes:
+  caddy_data:
+    external: true
+  caddy_config:
+    external: true
+
+services:
+  caddy:
+    image: caddy:latest
+    container_name: caddy
+    restart: unless-stopped
+    environment:
+      - DOMAIN=$CADDY_DOMAIN
+      - MAIL=$MAIL
+    volumes:
+      - caddy_data:/data
+      - caddy_config:/config
+      - ${CADDY_FILE}:/etc/caddy/Caddyfile
+      - ${RDSB_DIR}:/run/readsb/
+      - ${TAR_DIR}:/run/tar1090/
+      - ${TAR_WWWDIR}:/html
+    ports:
+      - 80:80
+      - 443:443
+      - 443:443/udp
+      - 22001:22001/udp
+      - 22001:22001/tcp
+
+  readsb:
+    build: ./build/readsb/
+    #image: readsb:latest
+    container_name: readsb
+    restart: unless-stopped
+    environment:
+      - UUID=${RDSB_UUID}
+      - DEVICE=${RDSB_DEVICE}
+      - LAT=${LAT}
+      - LON=${LON}
+      - FEEDS=${RDSB_FEEDS}
+      - EXTRA=${RDSB_EXTRA}
+    ports:
+      - 30001:30001 # RAW In
+      - 30002:30002 # RAW Out
+      - 30003:30003 # BaseStation Out
+      - 30031:30031 # BaseSation JAERO In
+      - 30030:30030 # BaseSation In
+      - 30004:30004 # Beast In
+      - 30104:30104 # Beast In
+      - 30005:30005 # Beast Out
+    devices:
+      - /dev/bus/usb:/dev/bus/usb
+    volumes:
+      - ${RDSB_DIR}:/readsb
+
+  piaware:
+    depends_on:
+      - readsb
+    build: ./build/piaware
+    #image: piaware:latest
+    container_name: piaware
+    restart: unless-stopped
+    environment:
+      - FEEDER_ID=${PAW_ID}
+      - RECEIVER_HOST=readsb
+      - MLAT_RESULTS=beast,connect,readsb:30004
+
+  fr24feed:
+    build: ./build/fr24feed
+    #image: fr24feed:latest
+    container_name: fr24feed
+    restart: unless-stopped
+    depends_on:
+    - readsb
+    volumes:
+    - ./fr24feed/fr24feed.ini:/etc/fr24feed.ini
+
+  adsblol-mlat:
+    #build: ./build/mlat-client/
+    image: mlat-client:latest
+    container_name: adsblol-mlat
+    restart: unless-stopped
+    depends_on:
+    - readsb
+    environment:
+      - LAT=$LAT
+      - LON=$LON
+      - ALT=$ALT
+      - ID=$STATION_ID
+      - INPUT=readsb:30005
+      - SERVER=$ADSBLOL_MLAT
+      - RESULTS=beast,connect,readsb:30004
+
+  adsbfi-mlat:
+    #build: ./build/mlat-client/
+    image: mlat-client:latest
+    container_name: adsbfi-mlat
+    restart: unless-stopped
+    depends_on:
+    - readsb
+    environment:
+      - LAT=$LAT
+      - LON=$LON
+      - ALT=$ALT
+      - ID=$STATION_ID
+      - INPUT=readsb:30005
+      - SERVER=$ADSBFI_MLAT
+      - RESULTS=beast,connect,readsb:30004
+
+  adsbone-mlat:
+    #build: ./build/mlat-client/
+    image: mlat-client:latest
+    container_name: adsbone-mlat
+    restart: unless-stopped
+    depends_on:
+    - readsb
+    environment:
+      - LAT=$LAT
+      - LON=$LON
+      - ALT=$ALT
+      - ID=$STATION_ID
+      - INPUT=readsb:30005
+      - SERVER=$ADSBONE_MLAT
+      - RESULTS=beast,connect,readsb:30004
+
+  adsbplsp-mlat:
+    #build: ./build/mlat-client/
+    image: mlat-client:latest
+    container_name: adsbplsp-mlat
+    restart: unless-stopped
+    depends_on:
+    - readsb
+    environment:
+      - LAT=$LAT
+      - LON=$LON
+      - ALT=$ALT
+      - ID=$STATION_ID
+      - INPUT=readsb:30005
+      - SERVER=$ADSBPLSP_MLAT
+      - RESULTS=beast,connect,readsb:30004
+
+  adsbx-mlat:
+    #build: ./build/mlat-client/
+    image: mlat-client:latest
+    container_name: adsbx-mlat
+    restart: unless-stopped
+    depends_on:
+    - readsb
+    environment:
+      - LAT=$LAT
+      - LON=$LON
+      - ALT=$ALT
+      - ID=$STATION_ID
+      - INPUT=readsb:30005
+      - SERVER=$ADSBX_MLAT
+      - RESULTS=beast,connect,readsb:30004
+
+  acarflow:
+    build: ./build/acarflow/
+    container_name: acarflow
+    restart: unless-stopped
+    environment:
+      - STATS_HOST=192.168.168.1
+    volumes:
+       - ./outputs.json:/app/outputs.json
+    ports:
+       - 21000:21000/udp # collector
+       - 21001:21001 # socketio
+       - 21001:21001/udp # socketio
+
+  dumpvdl2:
+    #build: ./build/dumpvdl2/
+    image: dumpvdl2:latest
+    container_name: dumpvdl2
+    restart : unless-stopped
+    devices:
+    - /dev/bus/usb:/dev/bus/usb
+    environment:
+      - ID=${STATION_ID}-VDL2
+      - DEVICE=$VDL2_DEVICE
+      - FEEDS=$VDL2_FEEDS
+      - FREQS=$VDL2_FREQS
+
+  acarsdec:
+    build: ./build/acarsdec
+    #image: acarsdec:latest
+    container_name: acarsdec
+    restart: unless-stopped
+    devices:
+    - /dev/bus/usb:/dev/bus/usb
+    environment:
+      - ID=${STATION_ID}-ACARS
+      - DEVICE=$ACARS_DEVICE
+      - FEEDS=$ACARS_FEEDS
+      - FREQS=$ACARS_FREQS
+
+  dumphfdl:
+    build: ./build/dumphfdl
+    container_name: dumphfdl
+    restart: unless-stopped
+    devices:
+    - /dev/bus/usb:/dev/bus/usb
+    environment:
+      - ID=${STATION_ID}-HFDL
+      - FREQS=$HFDL_FREQS
+      - FEEDS=$HFDL_FEEDS
+
+  lband:
+    build: ./build/lband
+    container_name: lband
+    restart: unless-stopped
+    network_mode: "host"
+    devices:
+    - /dev/bus/usb:/dev/bus/usb
+    environment:
+      - PASSWORD=$LBAND_PASSWORD
+    volumes:
+      - $JAERO_CONFIG_DIR:/root/.config/Jontisoft/

@@ -1,7 +1,7 @@
 FROM ubuntu:22.04 as build
 
 RUN apt-get update
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -y sudo wget xfce4 tightvncserver expect xterm
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -y sudo wget xfce4 tightvncserver expect xterm nano
 
 # SDRReceiver
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -y git
@@ -28,4 +28,5 @@ RUN mv /srv/SDRReceiver/sample_ini/ /srv/
 COPY ./password.exp ./password.exp
 COPY ./entrypoint.sh ./entrypoint.sh
 COPY ./jaero.sh /srv/jaero.sh
+COPY ./autostart/ /root/.config/autostart/
 CMD [ "./entrypoint.sh" ]

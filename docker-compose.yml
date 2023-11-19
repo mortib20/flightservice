@@ -11,7 +11,7 @@ services:
     restart: unless-stopped
     environment:
       - DOMAIN=$CADDY_DOMAIN
-      - MAIL=$MAIL
+      - CADDY_MAIL=$MAIN_MAIL
     volumes:
       - caddy_data:/data
       - caddy_config:/config
@@ -52,17 +52,17 @@ services:
     volumes:
       - ${RDSB_DIR}:/readsb
 
-  piaware:
-    depends_on:
-      - readsb
-    build: ./build/piaware
-    #image: piaware:latest
-    container_name: piaware
-    restart: unless-stopped
-    environment:
-      - FEEDER_ID=${PAW_ID}
-      - RECEIVER_HOST=readsb
-      - MLAT_RESULTS=beast,connect,readsb:30004
+  #piaware:
+  #  depends_on:
+  #    - readsb
+  #  build: ./build/piaware
+  #  #image: piaware:latest
+  #  container_name: piaware
+  #  restart: unless-stopped
+  #  environment:
+  #    - FEEDER_ID=${PAW_ID}
+  #    - RECEIVER_HOST=readsb
+  #    - MLAT_RESULTS=beast,connect,readsb:30004
 
   fr24feed:
     build: ./build/fr24feed
@@ -75,8 +75,8 @@ services:
     - ./fr24feed/fr24feed.ini:/etc/fr24feed.ini
 
   adsblol-mlat:
-    #build: ./build/mlat-client/
-    image: mlat-client:latest
+    build: ./build/mlat-client/
+    #image: mlat-client:latest
     container_name: adsblol-mlat
     restart: unless-stopped
     depends_on:
@@ -91,8 +91,8 @@ services:
       - RESULTS=beast,connect,readsb:30004
 
   adsbfi-mlat:
-    #build: ./build/mlat-client/
-    image: mlat-client:latest
+    build: ./build/mlat-client/
+    #image: mlat-client:latest
     container_name: adsbfi-mlat
     restart: unless-stopped
     depends_on:
@@ -107,8 +107,8 @@ services:
       - RESULTS=beast,connect,readsb:30004
 
   adsbone-mlat:
-    #build: ./build/mlat-client/
-    image: mlat-client:latest
+    build: ./build/mlat-client/
+    #image: mlat-client:latest
     container_name: adsbone-mlat
     restart: unless-stopped
     depends_on:
@@ -123,8 +123,8 @@ services:
       - RESULTS=beast,connect,readsb:30004
 
   adsbplsp-mlat:
-    #build: ./build/mlat-client/
-    image: mlat-client:latest
+    build: ./build/mlat-client/
+    #image: mlat-client:latest
     container_name: adsbplsp-mlat
     restart: unless-stopped
     depends_on:
@@ -139,8 +139,8 @@ services:
       - RESULTS=beast,connect,readsb:30004
 
   adsbx-mlat:
-    #build: ./build/mlat-client/
-    image: mlat-client:latest
+    build: ./build/mlat-client/
+    #image: mlat-client:latest
     container_name: adsbx-mlat
     restart: unless-stopped
     depends_on:
@@ -168,8 +168,8 @@ services:
        - 21001:21001/udp # socketio
 
   dumpvdl2:
-    #build: ./build/dumpvdl2/
-    image: dumpvdl2:latest
+    build: ./build/dumpvdl2/
+    #image: dumpvdl2:latest
     container_name: dumpvdl2
     restart : unless-stopped
     devices:

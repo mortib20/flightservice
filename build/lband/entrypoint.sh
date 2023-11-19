@@ -1,7 +1,7 @@
 #!/bin/bash
 
-rm /tmp/*
-rm /tmp/.*
+rm -Rf /tmp/*
+rm -Rf /tmp/.*
 
 ./password.exp $PASSWORD
 vncserver $SCREEN -geometry $GEO

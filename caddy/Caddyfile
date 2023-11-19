@@ -1,5 +1,5 @@
 {
-	email {$MAIL}
+	email {$CADDY_MAIL}
 	admin off
 
 	log {
@@ -23,6 +23,10 @@
 
 (acarflow) {
 	reverse_proxy acarflow:21001
+}
+
+(webcam) {
+	reverse_proxy 192.168.168.10:3277
 }
 
 (tar1090) {
@@ -126,10 +130,13 @@
 	import compression
 	import cors *
 	import tar1090
+	handle_path /webcamapi* {
+		import webcam
+	}
 }
 
 dyn2.martpaul.de:22001 {
-	import compression
+    import compression
     import cors *
     import acarflow
 }

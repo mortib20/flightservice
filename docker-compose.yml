@@ -158,6 +158,7 @@ services:
     build: ./build/acarflow/
     container_name: acarflow
     restart: unless-stopped
+#   network_mode: "host"
     environment:
       - STATS_HOST=192.168.168.1
     volumes:
@@ -215,3 +216,4 @@ services:
       - PASSWORD=$LBAND_PASSWORD
     volumes:
       - $JAERO_CONFIG_DIR:/root/.config/Jontisoft/
+

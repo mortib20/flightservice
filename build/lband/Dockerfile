@@ -14,7 +14,7 @@ RUN echo "y" | ./install.sh
 
 # JAERO
 WORKDIR /srv/jaero
-RUN wget https://github.com/jontio/JAERO/releases/download/latest/jaero_1.0.4.14-67-ga16a3ce-1_linux_x86_64.tar.gz -O - | tar -xz -C ../jaero
+RUN wget https://github.com/jontio/JAERO/releases/download/latest/jaero_1.0.4.14-5-g1d4e515-1_linux_x86_64.tar.gz -O - | tar -xz -C ../jaero
 WORKDIR /srv/jaero/jaero
 RUN echo "y" | ./install.sh
 
